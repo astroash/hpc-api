@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:12.4-alpine
+    container_name: hpc_postgres_db
+    environment:
+      - POSTGRES_PASSWORD=demo
+      - POSTGRES_USER=demo
+      - POSTGRES_DB=demo
+    ports:
+      - 5432:5432
+
+    volumes:
+      - hpc_postgres_db:/var/lib/postgresql/data
+      - ./backups:/backups
+  api:
+    build: .
+    container_name: hpc_api
+    env_file:
+      - .env
+    environment:
+      - DEV_DB_HOST=host.docker.internal
+      - DNSDOCK_NAME=node
+      - DNSDOCK_IMAGE=hpc
+      - PORT=5100
+      - NODE_ENV=dockerdev
+      - NAME=${NAME}
+      - POSTGRES_LOGGING=${POSTGRES_LOGGING}
+      - ROOT_URL=${ROOT_URL}
+      - AUTHBASE_URL=${AUTHBASE_URL}
+      - WAIT_HOSTS=pgsql:5432
+      - WAIT_HOSTS_TIMEOUT=120
+    volumes:
+      - ./:/usr/src/app
+    ports:
+      - 4000:5100
+    depends_on:
+      - db
+volumes:
+  hpc_postgres_db:
